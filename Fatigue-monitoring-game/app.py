@@ -1,12 +1,13 @@
-from flask import Flask, render_template
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from routes.main import main
-app.register_blueprint(main)
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///snapback.db'  # or whatever you named it
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-@app.route('/')
-def home():
-    return render_template('index.html')  # loads /templates/index.html
+db = SQLAlchemy(app)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Import your routes
+from routes.main import main
+app.register_blueprint(main)
