@@ -3,22 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <title>SnapBack - Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h2>Login</h2>
-    
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
-    
-    <form method="post">
-        <label>Email:</label><br>
-        <input type="email" name="email" required><br><br>
-        
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br><br>
-        
-        <input type="submit" value="Login">
-    </form>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">SnapBack</div>
+    </header>
+
+    <!-- Login Form Box -->
+    <div class="login-box">
+        <h2>Welcome Back!<br>Ready to get playing?</h2>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <label>Email</label>
+            <input type="email" name="email" required>
+
+            <label>Password</label>
+            <input type="password" name="password" required>
+
+            <div class="forgot">
+                <a href="#">Forgot Password?</a>
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+        </form>
+
+        <p class="register-link">Don't have an account? Please contact your HR.</p>
+    </div>
+
 </body>
 </html>

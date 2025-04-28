@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SnapBack - Dashboard</title>
+</head>
+<body>
+    <h2>Welcome, {{ name }}!</h2>
+    <h3>Your Role: {{ role }}</h3>
+
+    <p><a href="{{ url_for('auth.logout') }}">Logout</a></p>
+</body>
+</html>
