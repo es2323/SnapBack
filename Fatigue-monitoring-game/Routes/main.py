@@ -1,30 +1,28 @@
+import sqlite3
 from flask import Blueprint, request, jsonify
-from models.game_session import GameSession
 
 main = Blueprint('main', __name__)
 
 @main.route('/submit_score', methods=['POST'])
 def submit_score():
-    try:
-        data = request.get_json()
+    data = request.get_json()
+    user_email = data.get('user_email')
+    reaction_time = data.get('reaction_time')
 
-        if not data:
-            return jsonify({"error": "No data provided"}), 400
+    if not user_email or reaction_time is None:
+        return jsonify({"error": "Missing data"}), 400
 
-        user_email = data.get('user_email')
-        reaction_time = data.get('reaction_time')
+    fatigue_score = max(0, 100 - reaction_time // 10)
 
-        if user_email is None or reaction_time is None:
-            return jsonify({"error": "Missing user_email or reaction_time"}), 400
+    conn = sqlite3.connect('users.db')
+    cursor = conn.cursor()
 
-        # Simple fatigue score calculation
-        fatigue_score = max(0, 100 - reaction_time // 10)
+    cursor.execute('''
+        INSERT INTO game_sessions (user_email, game_type, fatigue_score, reaction_time)
+        VALUES (?, ?, ?, ?)
+    ''', (user_email, 'reaction', fatigue_score, reaction_time))
 
-        # Save to database using your OOP model
-        session = GameSession(user_email=user_email, fatigue_score=fatigue_score)
-        session.save_to_db()
+    conn.commit()
+    conn.close()
 
-        return jsonify({"message": "Score submitted successfully."}), 200
-
-    except Exception as e:
-        return jsonify({"error": f"Something went wrong: {str(e)}"}), 500
+    return jsonify({"message": "Score submitted successfully."}), 200
