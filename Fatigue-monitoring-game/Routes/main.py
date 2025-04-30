@@ -1,7 +1,15 @@
 import sqlite3
 from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, session
+
 
 main = Blueprint('main', __name__)
+
+@main.route('/dashboard')
+def dashboard():
+    name = session.get('name', 'Guest')
+    role = session.get('role', 'unknown')
+    return f"<h1>Welcome {name} - Role: {role}</h1><p>More dashboard features coming soon...</p>"
 
 @main.route('/submit_score', methods=['POST'])
 def submit_score():
@@ -14,7 +22,7 @@ def submit_score():
 
     fatigue_score = max(0, 100 - reaction_time // 10)
 
-    conn = sqlite3.connect('users.db')
+    conn = sqlite3.connect('main.db')
     cursor = conn.cursor()
 
     cursor.execute('''

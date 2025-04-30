@@ -1,5 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 import sqlite3
+from flask import flash
+
 
 auth = Blueprint('auth', __name__)
 
@@ -9,21 +11,21 @@ def login():
         email = request.form['email']
         password = request.form['password']
         
-        conn = sqlite3.connect('snapback.db')
+        conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
         cursor.execute("SELECT name, role FROM users WHERE email = ? AND password = ?", (email, password))
         user = cursor.fetchone()
         conn.close()
         
         if user:
-            name, role = user
-            session['user_email'] = email
-            session['user_name'] = name
-            session['user_role'] = role
-            return redirect(url_for('auth.dashboard'))
+            session['email'] = email
+            session['name'] = user[0]
+            session['role'] = user[1]
+            return redirect(url_for('main.dashboard'))
         else:
-            return render_template('login.html', error="Invalid email or password.")
-    
+            flash("Invalid email or password.")
+            return redirect(url_for('auth.login'))
+
     return render_template('login.html')
 
 @auth.route('/dashboard')
@@ -31,8 +33,8 @@ def dashboard():
     if 'user_email' not in session:
         return redirect(url_for('auth.login'))
     
-    name = session.get('user_name')
-    role = session.get('user_role')
+    name = session.get('name')
+    role = session.get('role')
     
     return render_template('dashboard.html', name=name, role=role)
 
