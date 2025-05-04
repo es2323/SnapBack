@@ -1,5 +1,8 @@
 import sqlite3
 from flask import Blueprint, request, jsonify, session, render_template
+import subprocess
+from flask import session, redirect, url_for, flash
+import random
 
 main = Blueprint('main', __name__)
 
@@ -9,6 +12,18 @@ def dashboard():
     role = session.get('role', 'unknown')
     your_score_value = 50 
     return render_template('dashboard.html', name=name, score=your_score_value)
+
+@main.route('/start_game')
+def start_game():
+    user_email = session.get('email')  # assuming you store this at login
+
+    try:
+        subprocess.Popen(['python', 'run_game.py', user_email])
+        flash("Game launched. Please return here after playing.", "info")
+    except Exception as e:
+        flash(f"Error launching game: {str(e)}", "danger")
+
+    return redirect(url_for('main.dashboard'))
 
 @main.route('/submit_score', methods=['POST'])
 def submit_score():
