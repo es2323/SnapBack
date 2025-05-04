@@ -1,7 +1,5 @@
 import sqlite3
-from flask import Blueprint, request, jsonify
-from flask import Blueprint, request, jsonify, session
-
+from flask import Blueprint, request, jsonify, session, render_template
 
 main = Blueprint('main', __name__)
 
@@ -9,7 +7,8 @@ main = Blueprint('main', __name__)
 def dashboard():
     name = session.get('name', 'Guest')
     role = session.get('role', 'unknown')
-    return f"<h1>Welcome {name} - Role: {role}</h1><p>More dashboard features coming soon...</p>"
+    your_score_value = 50 
+    return render_template('dashboard.html', name=name, score=your_score_value)
 
 @main.route('/submit_score', methods=['POST'])
 def submit_score():

@@ -3,11 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <title>SnapBack - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
-    <h2>Welcome, {{ name }}!</h2>
-    <h3>Your Role: {{ role }}</h3>
+    <div class="navbar">
+        <h1>SnapBack</h1>
+        <div class="menu-icon">☰</div>
+    </div>
 
-    <p><a href="{{ url_for('auth.logout') }}">Logout</a></p>
+    <div class="container">
+        <div class="greeting">
+            Welcome Back {{ name }}!<br>
+            Remember, a sound mind leads to a sound body. :)
+        </div>
+
+        <div class="score-section">
+            <p>Your current fatigue score:</p>
+            <div class="score-bar">
+                <div class="score-pointer" id="fatiguePointer"></div>
+            </div>
+            <div class="score-labels">
+                <span class="low">Low</span>
+                <span class="medium">Medium</span>
+                <span class="high">High</span>
+            </div>
+        </div>
+
+        <div class="feedback">
+            {% if score >= 70 %}
+                You're showing signs of high fatigue. Consider taking a break.
+            {% elif score >= 40 %}
+                You're showing moderate fatigue. Try scheduling lighter tasks.
+            {% else %}
+                Your fatigue levels are low. Keep up the good work!
+            {% endif %}
+        </div>
+
+        <div class="buttons">
+            <a href="/checkin">Complete Today's Check-In</a>
+            <a href="/game">Start Game</a>
+        </div>
+    </div>
+
+    <script>
+        // Set the score pointer position dynamically
+        document.getElementById('fatiguePointer').style.left = '{{ score|default(50, true) }}%';
+    </script>
 </body>
 </html>
