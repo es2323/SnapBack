@@ -1,0 +1,26 @@
+<!-- templates/results.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fatigue Report - SnapBack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h1>SnapBack</h1>
+    </div>
+
+    <div class="score-circle">
+        <h2>{{ score }}</h2>
+    </div>
+
+    <p class="feedback">{{ message }}</p>
+
+    <div class="score-metrics">
+        <div class="metric">Reaction Time<br><strong>{{ reaction }}ms</strong></div>
+        <div class="metric">Accuracy<br><strong>{{ accuracy }}%</strong></div>
+        <div class="metric">Errors Made<br><strong>{{ errors }}</strong></div>
+        <div class="metric">Completion Time<br><strong>{{ time }}s</strong></div>
+    </div>
+</body>
+</html>

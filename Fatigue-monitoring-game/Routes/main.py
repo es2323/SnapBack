@@ -86,3 +86,64 @@ def checkin():
 
     today = datetime.today().strftime('%A, %d %B %Y')
     return render_template('checkin.html', date=today)
+
+@main.route('/results')
+def results():
+    user_email = session.get('email')
+    if not user_email:
+        flash("Login required.", "danger")
+        return redirect(url_for('auth.login'))
+
+    conn = sqlite3.connect("main.db")
+    cursor = conn.cursor()
+
+    # Get latest game data
+    cursor.execute("""
+        SELECT fatigue_score, reaction_time, accuracy, errors, completion_time
+        FROM game_sessions
+        WHERE user_email = ?
+        ORDER BY timestamp DESC LIMIT 1
+    """, (user_email,))
+    game = cursor.fetchone()
+
+    # Get latest check-in data
+    cursor.execute("""
+        SELECT rest_score, alert_score, motivation_score, discomfort
+        FROM check_ins
+        WHERE user_email = ?
+        ORDER BY timestamp DESC LIMIT 1
+    """, (user_email,))
+    checkin = cursor.fetchone()
+    conn.close()
+
+    if not game or not checkin:
+        flash("Not enough data. Please complete a game and check-in first.", "warning")
+        return redirect(url_for('main.dashboard'))
+
+    # Basic logic to blend survey + game score
+    fatigue_game = game[0]
+    survey_avg = sum(checkin[:3]) / 3  # rest, alert, motivation
+    survey_bonus = (survey_avg - 3) * 5  # Range: [-10 to +10]
+
+    discomfort_penalty = -5 if checkin[3] == "Yes" else 0
+    final_fatigue = min(100, max(0, fatigue_game + survey_bonus + discomfort_penalty))
+
+    # Build message
+    if final_fatigue >= 80:
+        message = "You're performing well today! Keep it up. 🎉"
+    elif final_fatigue >= 60:
+        message = "Mild signs of tiredness. Consider short breaks and hydration. 🧘‍♂️"
+    elif final_fatigue >= 40:
+        message = "You're showing signs of fatigue. Plan lighter tasks. ⚠️"
+    else:
+        message = "You seem very fatigued. Take care of yourself. 🛌"
+
+    return render_template("results.html",
+        score=int(final_fatigue),
+        reaction=game[1],
+        accuracy=game[2],
+        errors=game[3],
+        time=game[4],
+        message=message
+    )
+

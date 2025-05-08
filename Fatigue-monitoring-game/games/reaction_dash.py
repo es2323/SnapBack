@@ -5,6 +5,7 @@ import random
 import time
 import sqlite3
 import requests
+import webbrowser
 
 def run_game(user_email="test@example.com"):
     pygame.init()
@@ -103,4 +104,6 @@ def run_game(user_email="test@example.com"):
         conn.close()
 
         print(f"Saved fatigue score: {avg_fatigue_score}")  # Optional debug
+        
+webbrowser.open("http://127.0.0.1:5000/results")
 

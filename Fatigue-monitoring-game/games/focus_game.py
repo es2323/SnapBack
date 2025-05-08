@@ -4,6 +4,7 @@ import time
 import sqlite3
 from datetime import datetime
 import requests
+import webbrowser
 
 # Setup
 pygame.init()
@@ -153,6 +154,8 @@ def run_game(user_email="test@example.com"):
         print("Failed to send score:", str(e))
 
     pygame.quit()
+
+webbrowser.open("http://127.0.0.1:5000/results")
 
 if __name__ == "__main__":
     run_game()
