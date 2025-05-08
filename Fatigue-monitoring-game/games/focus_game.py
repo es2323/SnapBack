@@ -2,9 +2,9 @@ import pygame
 import random
 import time
 import sqlite3
-from datetime import datetime
 import requests
 import webbrowser
+from datetime import datetime
 
 # Setup
 pygame.init()
@@ -45,16 +45,6 @@ def generate_words(level):
     positions = [(spacing * (i + 1) - 20, 180) for i in range(num_words)]
     return words, odd_index, positions
 
-def save_score_to_db(user_email, score):
-    conn = sqlite3.connect("main.db")
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT INTO game_sessions (user_email, fatigue_score, game_type, timestamp) VALUES (?, ?, ?, ?)",
-        (user_email, score, "focus", datetime.now())
-    )
-    conn.commit()
-    conn.close()
-
 def show_instructions():
     screen.fill(THEME_BG)
     instructions = [
@@ -88,6 +78,8 @@ def run_game(user_email="test@example.com"):
     running = True
     level = 1
     correct_answers = 0
+    reaction_times = []
+    errors = 0
 
     while running and level <= 10:
         words, odd_index, positions = generate_words(level)
@@ -110,10 +102,13 @@ def run_game(user_email="test@example.com"):
                         if rect.collidepoint(pos):
                             clicked = True
                             correct = (idx == odd_index)
+                            reaction_time = (time.time() - start_time) * 1000  # ms
+                            reaction_times.append(reaction_time)
 
             if level >= 5 and (time.time() - start_time > 5):
                 clicked = True
                 correct = False
+                errors += 1
 
             clock.tick(30)
 
@@ -137,25 +132,58 @@ def run_game(user_email="test@example.com"):
     pygame.display.flip()
     time.sleep(3)
 
-    # Final score and save
-    fatigue_score = correct_answers * 10  # Max 100
-    save_score_to_db(user_email, fatigue_score)
+    # Calculate metrics
+    avg_reaction_time = round(sum(reaction_times) / len(reaction_times)) if reaction_times else 1000
+    accuracy = round((correct_answers / (correct_answers + errors)) * 100) if (correct_answers + errors) > 0 else 0
+    fatigue_score = min(100, max(0, 100 - (avg_reaction_time // 20) + (accuracy // 2)))
+    completion_time = time.time() - start_time
 
-    # Submit to Flask backend
+    # Save via API
     payload = {
         "user_email": user_email,
         "game_type": "focus",
-        "reaction_time": 1000,  # placeholder
+        "fatigue_score": fatigue_score,
+        "reaction_time": avg_reaction_time,
+        "accuracy": accuracy,
+        "errors": errors,
+        "completion_time": completion_time
     }
+
     try:
         response = requests.post("http://127.0.0.1:5000/submit_score", json=payload)
-        print("Submitted:", response.status_code)
+        if response.status_code == 200:
+            print("Score submitted successfully")
+            webbrowser.open("http://127.0.0.1:5000/results")
+        else:
+            print("Failed to submit score:", response.text)
+            # Fallback to direct DB save
+            conn = sqlite3.connect('main.db')
+            cursor = conn.cursor()
+            cursor.execute(
+                """INSERT INTO game_sessions 
+                (user_email, game_type, fatigue_score, reaction_time, accuracy, errors, completion_time)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (user_email, "focus", fatigue_score, avg_reaction_time, accuracy, errors, completion_time)
+            )
+            conn.commit()
+            conn.close()
+            webbrowser.open("http://127.0.0.1:5000/results")
     except Exception as e:
-        print("Failed to send score:", str(e))
+        print("API Error:", str(e))
+        # Fallback to direct DB save
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        cursor.execute(
+            """INSERT INTO game_sessions 
+            (user_email, game_type, fatigue_score, reaction_time, accuracy, errors, completion_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (user_email, "focus", fatigue_score, avg_reaction_time, accuracy, errors, completion_time)
+        )
+        conn.commit()
+        conn.close()
+        webbrowser.open("http://127.0.0.1:5000/results")
 
     pygame.quit()
-
-webbrowser.open("http://127.0.0.1:5000/results")
 
 if __name__ == "__main__":
     run_game()

@@ -81,29 +81,44 @@ def run_game(user_email="test@example.com"):
 
     # Compute average fatigue score
     if reaction_times:
+        avg_reaction_time = round(sum(reaction_times) / len(reaction_times))
         fatigue_scores = [max(0, 100 - rt // 10) for rt in reaction_times]
         avg_fatigue_score = round(sum(fatigue_scores) / len(fatigue_scores))
+        accuracy = 100 - (len(reaction_times) / NUM_TRIALS * 10)  # Simplified accuracy metric
+
 
                 # After computing fatigue_score and reaction_time
         payload = {
-            "user_email": user_email,
-            "game_type": "reaction",  # 👈 OR "focus" depending on the game
-            "reaction_time": reaction_time
+        "user_email": user_email,
+        "game_type": "reaction",
+        "reaction_time": avg_reaction_time,
+        "fatigue_score": avg_fatigue_score,
+        "accuracy": accuracy,
+        "errors": NUM_TRIALS - len(reaction_times),
+        "completion_time": sum(reaction_times) / 1000  # Convert to seconds
         }
 
+    try:
         response = requests.post("http://127.0.0.1:5000/submit_score", json=payload)
-
+        if response.status_code == 200:
+            print("Score submitted successfully")
+            webbrowser.open("http://127.0.0.1:5000/results")
+        else:
+            print("Failed to submit score:", response.text)
+    except Exception as e:
+        print("API Error:", str(e))
+        # Fallback to direct DB save if API fails
         # Save to database
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO game_sessions (user_email, fatigue_score) VALUES (?, ?)",
-            (user_email, avg_fatigue_score)
+            """INSERT INTO game_sessions 
+            (user_email, game_type, fatigue_score, reaction_time, accuracy, errors, completion_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (user_email, "reaction", avg_fatigue_score, avg_reaction_time, accuracy, 
+             NUM_TRIALS - len(reaction_times), sum(reaction_times)/1000)           
         )
         conn.commit()
-        conn.close()
-
-        print(f"Saved fatigue score: {avg_fatigue_score}")  # Optional debug
-        
-webbrowser.open("http://127.0.0.1:5000/results")
+        conn.close()        
+        webbrowser.open("http://127.0.0.1:5000/results")
 

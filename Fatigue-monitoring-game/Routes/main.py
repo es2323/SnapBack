@@ -43,19 +43,22 @@ def submit_score():
     user_email = data.get('user_email')
     game_type = data.get('game_type')
     reaction_time = data.get('reaction_time')
+    fatigue_score = data.get('fatigue_score')
+    accuracy = data.get('accuracy')
+    errors = data.get('errors')
+    completion_time = data.get('completion_time')
 
-    if not user_email or reaction_time is None or not game_type:
-        return jsonify({"error": "Missing data"}), 400
-
-    fatigue_score = max(0, 100 - reaction_time // 10)
+    if not all([user_email, game_type, reaction_time is not None, fatigue_score is not None]):
+        return jsonify({"error": "Missing required data"}), 400
 
     conn = sqlite3.connect('main.db')
     cursor = conn.cursor()
 
     cursor.execute('''
-        INSERT INTO game_sessions (user_email, game_type, fatigue_score, reaction_time)
-        VALUES (?, ?, ?, ?)
-    ''', (user_email, game_type, fatigue_score, reaction_time))
+        INSERT INTO game_sessions 
+        (user_email, game_type, fatigue_score, reaction_time, accuracy, errors, completion_time)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (user_email, game_type, fatigue_score, reaction_time, accuracy, errors, completion_time))
 
     conn.commit()
     conn.close()
