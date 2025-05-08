@@ -1,0 +1,61 @@
+<!-- templates/checkin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SnapBack - Daily Check-In</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SnapBack</h1>
+        </div>
+        <div class="checkin-box">
+            <h2>Welcome to your Daily Check-In,<br> let us know how you’re feeling….</h2>
+            <p><strong>{{ date }}</strong></p>
+
+            <form method="POST">
+                <label>1. How well-rested do you feel today?</label><br>
+                <input type="range" name="rest_score" min="1" max="5" required><br><br>
+                <div class="scale-labels">
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>5</span>
+                  </div>
+                  
+
+                <label>2. How mentally alert do you feel today?</label><br>
+                <input type="range" name="alert_score" min="1" max="5" required><br><br>
+                <div class="scale-labels">
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>5</span>
+                  </div>
+                  
+
+                <label>3. How motivated are you to work today?</label><br>
+                <input type="range" name="motivation_score" min="1" max="5" required><br><br>
+                <div class="scale-labels">
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
+                    <span>5</span>
+                  </div>
+                  
+
+                <label>4. Are you experiencing any physical discomfort?</label><br>
+                <input type="radio" name="discomfort" value="Yes" required> Yes
+                <input type="radio" name="discomfort" value="No"> No<br><br>
+
+                <button type="submit">Submit Check-In</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,8 +1,9 @@
 import sqlite3
-from flask import Blueprint, request, jsonify, session, render_template
+import sys
+from flask import Blueprint, request, jsonify, session, render_template, redirect, url_for, flash, current_app
 import subprocess
-from flask import session, redirect, url_for, flash
 import random
+from datetime import datetime
 
 main = Blueprint('main', __name__)
 
@@ -15,13 +16,24 @@ def dashboard():
 
 @main.route('/start_game')
 def start_game():
-    user_email = session.get('email')  # assuming you store this at login
+    user_email = session.get('email')
+    if not user_email:
+        flash("Please log in first", "danger")
+        return redirect(url_for('auth.login'))
+    game_type = random.choice(['reaction', 'focus'])  # pick one
 
     try:
-        subprocess.Popen(['python', 'run_game.py', user_email])
-        flash("Game launched. Please return here after playing.", "info")
+        python_exe = sys.executable
+        subprocess.Popen([
+            python_exe,
+            'run_game.py',
+            game_type,
+            user_email
+        ], creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+
+        flash(f"{game_type.capitalize()} game launched.", "success")
     except Exception as e:
-        flash(f"Error launching game: {str(e)}", "danger")
+        flash(f"Error: {str(e)}", "danger")
 
     return redirect(url_for('main.dashboard'))
 
@@ -29,9 +41,10 @@ def start_game():
 def submit_score():
     data = request.get_json()
     user_email = data.get('user_email')
+    game_type = data.get('game_type')
     reaction_time = data.get('reaction_time')
 
-    if not user_email or reaction_time is None:
+    if not user_email or reaction_time is None or not game_type:
         return jsonify({"error": "Missing data"}), 400
 
     fatigue_score = max(0, 100 - reaction_time // 10)
@@ -42,9 +55,34 @@ def submit_score():
     cursor.execute('''
         INSERT INTO game_sessions (user_email, game_type, fatigue_score, reaction_time)
         VALUES (?, ?, ?, ?)
-    ''', (user_email, 'reaction', fatigue_score, reaction_time))
+    ''', (user_email, game_type, fatigue_score, reaction_time))
 
     conn.commit()
     conn.close()
 
     return jsonify({"message": "Score submitted successfully."}), 200
+
+
+@main.route('/checkin', methods=['GET', 'POST'])
+def checkin():
+    if request.method == 'POST':
+        user_email = session.get('email')
+        rest = request.form['rest_score']
+        alert = request.form['alert_score']
+        motivation = request.form['motivation_score']
+        discomfort = request.form['discomfort']
+
+        conn = sqlite3.connect('main.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO check_ins (user_email, rest_score, alert_score, motivation_score, discomfort)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (user_email, rest, alert, motivation, discomfort))
+        conn.commit()
+        conn.close()
+
+        flash("Thanks! Your check-in has been submitted.", "success")
+        return redirect(url_for('main.dashboard'))
+
+    today = datetime.today().strftime('%A, %d %B %Y')
+    return render_template('checkin.html', date=today)
