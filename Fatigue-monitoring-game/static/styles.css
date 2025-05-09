@@ -271,3 +271,50 @@ button {
     font-size: 18px;
     max-width: 600px;
 }
+
+.dashboard-grid {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+}
+
+.dashboard-card {
+    background-color: #007b80;
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    width: 250px;
+}
+
+.dashboard-card .score {
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.lower-section {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+    gap: 20px;
+}
+
+.alert-box, .team-breakdown, .chart-box {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 20px;
+    flex: 1;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+table th, table td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    text-align: left;
+}
+
+

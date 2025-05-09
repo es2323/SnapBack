@@ -1,0 +1,191 @@
+<!-- templates/manager_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manager Dashboard - SnapBack</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #007d8a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .metrics {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+        }
+
+        .card {
+            background-color: #007d8a;
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            width: 28%;
+            text-align: center;
+        }
+
+        .main-content {
+            display: flex;
+            gap: 40px;
+            justify-content: space-between;
+        }
+
+        .left-panel, .center-panel, .right-panel {
+            flex: 1;
+        }
+
+        .left-panel, .center-panel {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .left-panel h3, .center-panel h3 {
+            margin-top: 0;
+        }
+
+        .team-select {
+            margin: 10px 0;
+        }
+
+        .team-select select {
+            width: 100%;
+            padding: 6px;
+            border-radius: 5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        canvas {
+            width: 100% !important;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Welcome to your team’s Fatigue Dashboard</h1>
+</div>
+
+<div class="metrics">
+    <div class="card">
+        <h3>Avg. Team Fatigue Score</h3>
+        <p>{{ avg_score }}/100</p>
+    </div>
+    <div class="card" style="background-color: #006080;">
+        <h3>Number of High-Fatigue Alerts</h3>
+        <p>{{ high_alerts }}</p>
+    </div>
+    <div class="card" style="background-color: #005566;">
+        <h3>Check-in Completion Rate</h3>
+        <p>{{ checkin_rate }}%</p>
+    </div>
+</div>
+
+<div class="main-content">
+    <!-- Current Alerts -->
+    <div class="left-panel">
+        <h3>Current Alerts</h3>
+        <ul>
+            <li>Team A: 3 days in high fatigue</li>
+            <li>QA Testers: Low check-in rate</li>
+            <li>UI Team: Fatigue rising past 3 days</li>
+        </ul>
+    </div>
+
+    <!-- Team Breakdown -->
+    <div class="center-panel">
+        <h3>Team Breakdown</h3>
+        <div class="team-select">
+            <label for="team">Select Team:</label>
+            <select id="team" name="team">
+                <option>Team A</option>
+                <option>Team B</option>
+                <option>Team C</option>
+            </select>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Fatigue Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Developer</td>
+                    <td>↔ Steady</td>
+                </tr>
+                <tr>
+                    <td>QA Tester</td>
+                    <td>↑ Up</td>
+                </tr>
+                <tr>
+                    <td>UI Designer</td>
+                    <td>↔ Steady</td>
+                </tr>
+                <tr>
+                    <td>Systems Engineer</td>
+                    <td>↓ Down</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Graph -->
+    <div class="right-panel">
+        <canvas id="fatigueChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('fatigueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ labels|tojson }},
+            datasets: [{
+                label: 'Avg Fatigue',
+                data: {{ scores|tojson }},
+                borderColor: '#007d8a',
+                backgroundColor: 'rgba(0, 125, 138, 0.2)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3
+            }]
+        },
+        options: {
+            scales: {
+                y: { beginAtZero: true, max: 100 },
+                x: { title: { display: true, text: 'Date' } }
+            }
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -30,7 +30,8 @@ def run_game(game_name, user_email):
 if __name__ == "__main__":
     if len(sys.argv) < 3:
         print("Usage: python run_game.py <game_name> <user_email>")
-    else:
-        run_game(sys.argv[1], sys.argv[2])
-        user_email = sys.argv[2]
-        run_game(game_name, user_email)
+        sys.exit(1)
+
+    game_name = sys.argv[1]
+    user_email = sys.argv[2]
+    run_game(game_name, user_email)

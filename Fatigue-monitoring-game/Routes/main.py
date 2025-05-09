@@ -97,7 +97,7 @@ def results():
         flash("Login required.", "danger")
         return redirect(url_for('auth.login'))
 
-    conn = sqlite3.connect("main.db")
+    conn = sqlite3.connect("main.db", timeout=5)
     cursor = conn.cursor()
 
     # Get latest game data
@@ -150,3 +150,57 @@ def results():
         message=message
     )
 
+@main.route('/manager_dashboard')
+def manager_dashboard():
+    if session.get('role') != 'manager':
+        return redirect(url_for('main.dashboard'))  # Restrict access
+    
+    team = session.get('team')  # E.g., 'Team A'
+    conn = sqlite3.connect('main.db')
+    cursor = conn.cursor()
+
+    # 1. Average Team Fatigue Score
+    cursor.execute('''
+        SELECT AVG(fatigue_score)
+        FROM game_sessions
+        WHERE user_email IN (
+            SELECT email FROM users WHERE team = ?
+        )
+    ''', (team,))
+    avg_score = round(cursor.fetchone()[0] or 0)
+
+    # 2. Number of High Fatigue Alerts (score < 40 in last 3 days)
+    cursor.execute('''
+        SELECT date(timestamp), AVG(fatigue_score)
+        FROM game_sessions
+        WHERE user_email IN (SELECT email FROM users WHERE team = ?)
+        GROUP BY date(timestamp)
+        ORDER BY date(timestamp) DESC
+        LIMIT 7
+    ''', (team,))
+    rows = cursor.fetchall()
+    labels = [row[0] for row in rows][::-1]
+    scores = [round(row[1], 1) for row in rows][::-1]
+
+    high_alerts = sum(1 for row in rows[:3] if row[1] < 40)
+
+    # 3. Check-in completion rate (past 7 days)
+    cursor.execute('''
+        SELECT COUNT(*) FROM check_ins 
+        WHERE timestamp >= date('now', '-7 day') 
+        AND user_email IN (SELECT email FROM users WHERE team = ?)
+    ''', (team,))
+    checkin_done = cursor.fetchone()[0]
+
+    cursor.execute('''
+        SELECT COUNT(*) FROM users WHERE team = ?
+    ''', (team,))
+    total_team = cursor.fetchone()[0]
+    checkin_rate = int((checkin_done / (total_team * 7)) * 100) if total_team > 0 else 0
+
+    conn.close()
+
+    return render_template("manager_dashboard.html", 
+    avg_score=avg_score, high_alerts=high_alerts, 
+    checkin_rate=checkin_rate, labels=labels, scores=scores
+)
