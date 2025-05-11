@@ -4,6 +4,9 @@ from flask import Blueprint, request, jsonify, session, render_template, redirec
 import subprocess
 import random
 from datetime import datetime
+import csv
+from flask import send_file
+from io import StringIO
 
 main = Blueprint('main', __name__)
 
@@ -271,5 +274,47 @@ def manager_dashboard():
 def hr_dashboard():
     if session.get('role') != 'hr':
         return redirect(url_for('main.dashboard'))
+    return render_template('hr_dashboard.html')
 
-    return render_template('hr_dashboard.html', name=session.get('name'))
+@main.route('/generate_report', methods=['POST'])
+def generate_report():
+    output = StringIO()
+    writer = csv.writer(output)
+
+    conn = sqlite3.connect('main.db')
+    cursor = conn.cursor()
+
+    # Avg fatigue per team
+    writer.writerow(['Department', 'Average Fatigue Score'])
+    cursor.execute('''
+        SELECT team, AVG(fatigue_score)
+        FROM users
+        JOIN game_sessions ON users.email = game_sessions.user_email
+        GROUP BY team
+    ''')
+    for row in cursor.fetchall():
+        writer.writerow(row)
+
+    writer.writerow([])
+
+    # 7-day fatigue trend
+    writer.writerow(['Date', 'Average Fatigue Score'])
+    cursor.execute('''
+        SELECT date(timestamp), AVG(fatigue_score)
+        FROM game_sessions
+        GROUP BY date(timestamp)
+        ORDER BY date(timestamp) DESC
+        LIMIT 7
+    ''')
+    for row in cursor.fetchall():
+        writer.writerow(row)
+
+    conn.close()
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name='fatigue_report.csv'
+    )
