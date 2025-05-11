@@ -1,11 +1,66 @@
 <!-- templates/hr_dashboard.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>HR Dashboard</title>
+  <meta charset="UTF-8">
+  <title>HR Dashboard - SnapBack</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .header {
+      background-color: #007d8a;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 400px;
+      margin: 80px auto;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background-color: #007d8a;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .btn:hover {
+      background-color: #005f6a;
+    }
+  </style>
 </head>
 <body>
-    <h1>Welcome to the HR Dashboard, {{ name }}!</h1>
-    <p>HR-specific features coming soon...</p>
+
+  <div class="header">
+    <h1>Welcome, HR 👥</h1>
+  </div>
+
+  <div class="card">
+    <h2>Generate Company Fatigue Report</h2>
+    <form action="{{ url_for('main.generate_report') }}" method="POST">
+      <button type="submit" class="btn">Generate Report (CSV)</button>
+    </form>
+  </div>
+
 </body>
 </html>

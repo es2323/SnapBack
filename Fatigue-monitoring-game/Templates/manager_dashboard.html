@@ -108,11 +108,11 @@
     <!-- Current Alerts -->
     <div class="left-panel">
         <h3>Current Alerts</h3>
-        <ul>
-            <li>Team A: 3 days in high fatigue</li>
-            <li>QA Testers: Low check-in rate</li>
-            <li>UI Team: Fatigue rising past 3 days</li>
-        </ul>
+            <ul>
+        {% for alert in alerts %}
+            <li>{{ alert }}</li>
+        {% endfor %}
+            </ul>
     </div>
 
     <!-- Team Breakdown -->
@@ -134,24 +134,14 @@
                     <th>Fatigue Trend</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <td>Developer</td>
-                    <td>↔ Steady</td>
-                </tr>
-                <tr>
-                    <td>QA Tester</td>
-                    <td>↑ Up</td>
-                </tr>
-                <tr>
-                    <td>UI Designer</td>
-                    <td>↔ Steady</td>
-                </tr>
-                <tr>
-                    <td>Systems Engineer</td>
-                    <td>↓ Down</td>
-                </tr>
-            </tbody>
+                <tbody>
+                {% for role, trend in breakdown %}
+                    <tr>
+                        <td>{{ role }}</td>
+                        <td>{{ trend }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
         </table>
     </div>
 

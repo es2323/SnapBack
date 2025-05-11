@@ -201,14 +201,71 @@ def manager_dashboard():
         total_team = cursor.fetchone()[0]
         checkin_rate = int((checkin_done / (total_team * 7)) * 100) if total_team else 0
 
+        # --- DYNAMIC CURRENT ALERTS ---
+        alerts = []
+
+        # Recent team fatigue (past 3 days)
+        cursor.execute('''
+            SELECT date(timestamp), AVG(fatigue_score)
+            FROM game_sessions
+            WHERE user_email IN (SELECT email FROM users WHERE team = ?)
+            GROUP BY date(timestamp)
+            ORDER BY date(timestamp) DESC
+            LIMIT 3
+        ''', (team,))
+        recent = cursor.fetchall()
+        if recent and all(score < 40 for _, score in recent):
+            alerts.append(f"{team}: High fatigue last 3 days ⚠️")
+
+        # Check-in rate alert
+        if checkin_rate < 60:
+            alerts.append(f"{team}: Low check-in rate ({checkin_rate}%) ⚠️")
+
+                # --- ROLE-BASED TRENDS FOR BREAKDOWN ---
+        cursor.execute('''
+            SELECT role FROM users WHERE team = ? AND role != 'manager'
+            GROUP BY role
+        ''', (team,))
+        roles = [r[0] for r in cursor.fetchall()]
+        breakdown = []
+
+        for role in roles:
+            cursor.execute('''
+                SELECT date(timestamp), AVG(fatigue_score)
+                FROM game_sessions
+                WHERE user_email IN (
+                    SELECT email FROM users WHERE team = ? AND role = ?
+                )
+                GROUP BY date(timestamp)
+                ORDER BY date(timestamp) DESC
+                LIMIT 3
+            ''', (team, role))
+            trend_data = [row[1] for row in cursor.fetchall()]
+            
+            if len(trend_data) >= 2:
+                if trend_data[0] > trend_data[1] + 2:
+                    trend = "↓ Down"
+                elif trend_data[0] < trend_data[1] - 2:
+                    trend = "↑ Up"
+                else:
+                    trend = "↔ Steady"
+            else:
+                trend = "–"
+
+    breakdown.append((role.capitalize(), trend))
+
+
     return render_template(
         "manager_dashboard.html",
         avg_score=avg_score,
         high_alerts=high_alerts,
         checkin_rate=checkin_rate,
         labels=labels,
-        scores=scores
-    )
+        scores=scores,
+        alerts=alerts,
+        breakdown=breakdown
+)
+
 
 @main.route('/hr_dashboard')
 def hr_dashboard():
