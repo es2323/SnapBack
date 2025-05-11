@@ -6,7 +6,7 @@ import random
 from datetime import datetime
 import csv
 from flask import send_file
-from io import StringIO
+from io import BytesIO, StringIO
 
 main = Blueprint('main', __name__)
 
@@ -278,27 +278,26 @@ def hr_dashboard():
 
 @main.route('/generate_report', methods=['POST'])
 def generate_report():
-    output = StringIO()
-    writer = csv.writer(output)
-
+    output = BytesIO()
+    writer = csv.writer(output := BytesIO().__enter__(), delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    
     conn = sqlite3.connect('main.db')
     cursor = conn.cursor()
 
-    # Avg fatigue per team
-    writer.writerow(['Department', 'Average Fatigue Score'])
+    # Write header
+    text_stream = []
+
+    text_stream.append(['Department', 'Average Fatigue Score'])
     cursor.execute('''
         SELECT team, AVG(fatigue_score)
         FROM users
         JOIN game_sessions ON users.email = game_sessions.user_email
         GROUP BY team
     ''')
-    for row in cursor.fetchall():
-        writer.writerow(row)
+    text_stream.extend(cursor.fetchall())
 
-    writer.writerow([])
-
-    # 7-day fatigue trend
-    writer.writerow(['Date', 'Average Fatigue Score'])
+    text_stream.append([])
+    text_stream.append(['Date', 'Average Fatigue Score'])
     cursor.execute('''
         SELECT date(timestamp), AVG(fatigue_score)
         FROM game_sessions
@@ -306,14 +305,23 @@ def generate_report():
         ORDER BY date(timestamp) DESC
         LIMIT 7
     ''')
-    for row in cursor.fetchall():
-        writer.writerow(row)
+    text_stream.extend(cursor.fetchall())
 
     conn.close()
-    output.seek(0)
+
+    # Convert to actual CSV bytes
+    string_buffer = StringIO()
+    csv_writer = csv.writer(string_buffer)
+    for row in text_stream:
+        csv_writer.writerow(row)
+
+    # Encode into bytes
+    byte_data = string_buffer.getvalue().encode('utf-8')
+    byte_stream = BytesIO(byte_data)
+    byte_stream.seek(0)
 
     return send_file(
-        output,
+        byte_stream,
         mimetype='text/csv',
         as_attachment=True,
         download_name='fatigue_report.csv'
