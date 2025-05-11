@@ -13,7 +13,7 @@ def login():
         
         conn = sqlite3.connect('main.db')
         cursor = conn.cursor()
-        cursor.execute("SELECT name, role FROM users WHERE email = ? AND password = ?", (email, password))
+        cursor.execute("SELECT name, role, team FROM users WHERE email = ? AND password = ?", (email, password))
         user = cursor.fetchone()
         conn.close()
         
@@ -21,7 +21,14 @@ def login():
             session['email'] = email
             session['name'] = user[0]
             session['role'] = user[1]
-            return redirect(url_for('main.dashboard'))
+
+            if user[1] == 'manager':
+                return redirect(url_for('main.manager_dashboard'))
+            elif user[1] == 'hr':
+                return redirect(url_for('main.hr_dashboard'))
+            else:
+                return redirect(url_for('main.dashboard'))
+
         else:
             flash("Invalid email or password.")
             return redirect(url_for('auth.login'))
