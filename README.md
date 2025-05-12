@@ -73,7 +73,3 @@
 git clone https://github.com/YOUR_USERNAME/SnapBack.git
 cd SnapBack
 
-📚 Acknowledgements
-Developed for academic coursework at University of Derby.
-
-Inspired by real-world needs for proactive employee wellbeing monitoring.
