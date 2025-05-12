@@ -55,7 +55,7 @@
 
 ---
 
-## 🧪 Example Users
+## 🧪 Example Users for Testing
 
 | Email                  | Password     | Role     | Team     |
 |------------------------|--------------|----------|----------|
@@ -66,10 +66,5 @@
 
 ---
 
-## 📦 Installation
 
-### 1. Clone the repo
-```bash
-git clone https://github.com/YOUR_USERNAME/SnapBack.git
-cd SnapBack
 
