@@ -21,6 +21,7 @@ def login():
             session['email'] = email
             session['name'] = user[0]
             session['role'] = user[1]
+            session['team'] = user[2]
 
             if user[1] == 'manager':
                 return redirect(url_for('main.manager_dashboard'))

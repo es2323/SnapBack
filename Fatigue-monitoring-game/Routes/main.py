@@ -255,7 +255,7 @@ def manager_dashboard():
             else:
                 trend = "–"
 
-    breakdown.append((role.capitalize(), trend))
+            breakdown.append(((role.capitalize() if role else "Unknown"), trend))
 
 
     return render_template(
